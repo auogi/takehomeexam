@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import takehomeexam.exception.CustomDBException;
 import takehomeexam.model.Student;
 import takehomeexam.repository.StudentRepository;
-
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +19,6 @@ public class StudentServiceImpl implements StudentService {
     @Autowired
     public StudentServiceImpl(StudentRepository studentRepository){
         this.studentRepository = studentRepository;
-
     }
 
     @Override
@@ -27,25 +26,32 @@ public class StudentServiceImpl implements StudentService {
         Optional<Student> student = studentRepository.findById(id);
         return student.isPresent() ? student.get() : null;
     }
-
     @Override
     public List<Student> findStudentsByClassroom(String classroom) {
         return studentRepository.findAllByClassRoom(classroom);
     }
 
     @Override
-    public void addStudent(Student student) {
-        studentRepository.save(student);
+    public Student addStudent(Student student) {
+        try{
+            return studentRepository.save(student);
+        }catch(Exception e){
+            throw new CustomDBException(e.getMessage());
+        }
     }
 
     @Override
-    public void updateStudent(Student student) {
+    public Student updateStudent(Student student) {
         Optional<Student> existingStudent = studentRepository.findById(student.getId());
 
         if(existingStudent.isPresent()){
-            studentRepository.saveAndFlush(existingStudent.get());
+            try{
+                return studentRepository.saveAndFlush(existingStudent.get());
+            }catch(Exception e){
+                throw new CustomDBException(e.getMessage());
+            }
         }else{
-            //Throw Error
+            throw new CustomDBException("Student ID Does Not Exist");
         }
     }
 
@@ -55,7 +61,7 @@ public class StudentServiceImpl implements StudentService {
         if(existingStudent.isPresent()){
             studentRepository.deleteById(existingStudent.get().getId());
         }else{
-            //Throw Error
+            throw new CustomDBException("Student ID Does Not Exist");
         }
     }
 }

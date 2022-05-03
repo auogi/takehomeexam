@@ -1,6 +1,5 @@
-package takehomeexam.controller;
+package takehomeexam.service;
 
-import org.json.JSONException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,31 +10,30 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import takehomeexam.controller.StudentController;
 import takehomeexam.model.Student;
 import takehomeexam.repository.StudentRepository;
-import takehomeexam.service.StudentServiceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SpringExtension.class)
-public class StudentControllerTests {
+public class StudentServiceImplTests {
 
     @Mock
     private StudentRepository studentRepository;
 
-    @InjectMocks
-    private StudentController studentController;
     @InjectMocks
     private StudentServiceImpl studentServiceImpl;
 
     @BeforeEach
     public void initObjects() {
         this.studentServiceImpl = new StudentServiceImpl(this.studentRepository);
-        this.studentController = new StudentController(this.studentServiceImpl);
     }
 
 
@@ -49,11 +47,11 @@ public class StudentControllerTests {
         student.setNationality("American");
 
         Mockito.when(this.studentRepository.save(any(Student.class))).thenReturn(student);
-        ResponseEntity<String> response = this.studentController.addStudent(student);
 
+        assertDoesNotThrow(() -> {
+            this.studentServiceImpl.addStudent(student);
+        });
 
-        Assertions.assertEquals(201,response.getStatusCodeValue());
-        Assertions.assertEquals("New Student Succesfully Added",response.getBody());
     }
 
     @Test
@@ -68,11 +66,10 @@ public class StudentControllerTests {
         Mockito.when(this.studentRepository.findById(anyLong())).thenReturn(Optional.of(student));
         Mockito.when(this.studentRepository.saveAndFlush(any(Student.class))).thenReturn(student);
 
-        ResponseEntity<String> response = this.studentController.updateStudent(student);
+        assertDoesNotThrow(() -> {
+            this.studentServiceImpl.updateStudent(student);
+        });
 
-
-        Assertions.assertEquals(202,response.getStatusCodeValue());
-        Assertions.assertEquals("Student Succesfully Updated",response.getBody());
     }
 
     @Test
@@ -86,31 +83,29 @@ public class StudentControllerTests {
         Mockito.when(this.studentRepository.findById(anyLong())).thenReturn(Optional.of(student));
         Mockito.doNothing().when(this.studentRepository).deleteById(anyLong());
 
-        ResponseEntity<String> response = this.studentController.deleteStudent(student);
-
-        Assertions.assertEquals(202,response.getStatusCodeValue());
-        Assertions.assertEquals("Student Succesfully Removed",response.getBody());
+        assertDoesNotThrow(() -> {
+            this.studentServiceImpl.deleteStudent(student);
+        });
     }
 
     @Test
     public void shouldFindStudentById(){
-        Student student = new Student();
-        student.setId(1L);
-        student.setFirstName("test");
-        student.setLastName("test");
-        student.setClassRoom("1C");
-        student.setNationality("American");
+        Student expectedStudent = new Student();
+        expectedStudent.setId(1L);
+        expectedStudent.setFirstName("test");
+        expectedStudent.setLastName("test");
+        expectedStudent.setClassRoom("1C");
+        expectedStudent.setNationality("American");
 
-        Mockito.when(this.studentRepository.findById(anyLong())).thenReturn(Optional.of(student));
+        Mockito.when(this.studentRepository.findById(anyLong())).thenReturn(Optional.of(expectedStudent));
 
-        List<Student> students = this.studentController.fetchStudents(Optional.of(1L), Optional.empty());
+        Student student = this.studentServiceImpl.findStudentById(1L);
 
-        Assertions.assertEquals(1,students.size());
-        Assertions.assertEquals(students.get(0).getId(), 1L);
-        Assertions.assertEquals(students.get(0).getClassRoom(), "1C");
-        Assertions.assertEquals(students.get(0).getFirstName(), "test");
-        Assertions.assertEquals(students.get(0).getLastName(), "test");
-        Assertions.assertEquals(students.get(0).getNationality(), "American");
+        Assertions.assertEquals(student.getId(), 1L);
+        Assertions.assertEquals(student.getClassRoom(), "1C");
+        Assertions.assertEquals(student.getFirstName(), "test");
+        Assertions.assertEquals(student.getLastName(), "test");
+        Assertions.assertEquals(student.getNationality(), "American");
     }
 
     @Test
@@ -135,7 +130,7 @@ public class StudentControllerTests {
 
         Mockito.when(this.studentRepository.findAllByClassRoom(anyString())).thenReturn(expectedStudents);
 
-        List<Student> students = this.studentController.fetchStudents(Optional.empty(), Optional.of("1C"));
+        List<Student> students = this.studentServiceImpl.findStudentsByClassroom("1C");
 
         Assertions.assertEquals(2,students.size());
         Assertions.assertEquals(students.get(0).getId(), 1L);

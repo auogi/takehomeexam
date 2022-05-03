@@ -6,9 +6,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @AutoConfigureTestDatabase
+// Test class added ONLY to cover main() invocation no assertion necessary here
 class TakeHomeExamApplicationTests {
 
     @Test
     void contextLoads() {
+        TakeHomeExamApplication.main(new String[] {});
     }
 }
