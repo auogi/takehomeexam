@@ -31,6 +31,6 @@ public class Student {
     private String classRoom;
 
     @Column(name = "nationality")
-    @NotBlank(message="class Cannot be blank")
+    @NotBlank(message="nationality Cannot be blank")
     private String nationality;
 }
